@@ -1,4 +1,6 @@
 var express = require('express');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
 var path = require('path');
 var app = express();
 
@@ -73,6 +75,43 @@ app.post('/', function (req, res) {
     res.render('home');
 
 });
+//data in db 
+var product = [
+    {
+    name : "Galaxy S21 Ultra",
+    price : "18,000"
+
+},
+
+{
+    name : "iPhone 13 Pro",
+    price : '23,000'
+
+},
+
+
+{
+    name : "Leaves of Grass",
+    price : '180'
+
+},
+
+{
+    name : "The Sun and Her Flowers",
+    price : '200'
+
+},
+{
+    name : "Boxing Bag",
+    price : '300'
+
+},
+{
+    name : "Tennis Racket",
+    price : '500'
+
+}
+];
 
 //Mongo atlas connection
 async function main() {
@@ -83,7 +122,8 @@ async function main() {
 
     var user = { username: "User2", password: "Pass2" };
     await client.db('firstdb').collection('firstcollection').insertOne(user);
-
+    await client.db('firstdb').createCollection("product");
+    await client.db('firstdb').collection('product').insertMany(product)
     var output = await client.db('firstdb').collection('firstcollection').find().toArray();
     client.close();
 }
