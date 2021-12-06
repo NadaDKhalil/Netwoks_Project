@@ -113,20 +113,29 @@ var product = [
 }
 ];
 
+console.log("nada");
 //Mongo atlas connection
 async function main() {
+    console.log("nada");
     var { MongoClient } = require('mongodb');
     var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
     var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     await client.connect();
 
     var user = { username: "User2", password: "Pass2" };
-    await client.db('firstdb').collection('firstcollection').insertOne(user);
-    await client.db('firstdb').createCollection("product");
-    await client.db('firstdb').collection('product').insertMany(product)
-    var output = await client.db('firstdb').collection('firstcollection').find().toArray();
+    // await client.db('firstdb').collection('firstcollection').insertOne(user);
+    // await client.db('firstdb').createCollection("product");
+    // await client.db('firstdb').createCollection("cart");
+    // await client.db('firstdb').collection('product').insertMany(product)
+    // var output = await client.db('firstdb').collection('firstcollection').find().toArray();
+    var temp = await client.db('firstdb').collection('product').find().toArray();
+    console.log(temp);
+    console.log("nada");
+
+
+
     client.close();
 }
-//main().catch(console.error);
+main().catch(console.error);
 
 app.listen(4000);
