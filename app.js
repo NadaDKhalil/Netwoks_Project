@@ -2,7 +2,10 @@ var express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 var path = require('path');
+const { CallTracker } = require('assert/strict');
 var app = express();
+
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -26,6 +29,15 @@ app.get('/boxing', function (req, res) {
 
 app.get('/cart', function (req, res) {
     res.render('cart')
+});
+app.post("/cart", urlencodedParser, function (req, res) {
+    // console.log(req.body())
+    // res.redirect();
+    const user = req.body();
+    Cart.push(user);
+    res.json(Cart);
+    
+    
 });
 
 app.get('/galaxy', function (req, res) {
@@ -129,7 +141,9 @@ async function main() {
     // await client.db('firstdb').collection('product').insertMany(product)
     // var output = await client.db('firstdb').collection('firstcollection').find().toArray();
     var temp = await client.db('firstdb').collection('product').find().toArray();
+    var temp1 = await client.db('firstdb').collection('cart').find().toArray();
     console.log(temp);
+    console.log(temp1);
     console.log("nada");
 
 
