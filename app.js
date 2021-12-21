@@ -1,6 +1,10 @@
 var express = require('express');
 var path = require('path');
 var app = express();
+//var popupS = require('popups');
+let alert = require('alert');
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -51,7 +55,7 @@ app.get('/registration', function (req, res) {
 });
 
 app.get('/searchresults', function (req, res) {
-    res.render('searchresults')
+    res.render('searchresults', {})
 });
 
 app.get('/sports', function (req, res) {
@@ -74,17 +78,52 @@ app.post('/', function (req, res) {
 
 });
 
+app.post('/register', function (req, res) {
+    var x = req.body.username;
+    var y = req.body.password;
+    //console.log(x);
+    //console.log(y);
+    var user = { username: x, password: y };
+    main(user, res).catch(console.error);
+
+
+});
+
+//search Post
+app.post('/search', function (req, res) {
+    var x = req.body.Search;
+    console.log(x);
+    res.render('searchresults');
+});
+
 //Mongo atlas connection
-async function main() {
+async function main(x, res) {
     var { MongoClient } = require('mongodb');
     var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
     var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     await client.connect();
-
-    var user = { username: "User2", password: "Pass2" };
-    await client.db('firstdb').collection('firstcollection').insertOne(user);
-
-    var output = await client.db('firstdb').collection('firstcollection').find().toArray();
+    //var x = req.body.username;
+    //var y = req.body.password;
+    //var user = { username: x, password: y };
+    //await client.db('firstdb').collection('firstcollection').insertOne(x);
+    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
+    console.log(out);
+    if (out.length != 0) {
+        /*if (typeof window === "undefined") {
+            //console.log("Oops, `window` is not defined");
+            Window.alert("Username is already used.");
+        }
+        //alert("Username is already used.");*/
+        /*popupS.alert({
+            content: 'Username is already used!'
+        });*/
+        alert("Username is already used!")
+        res.render('registration');
+    }
+    else {
+        await client.db('firstdb').collection('firstcollection').insertOne(x);
+        res.render('login');
+    }
     client.close();
 }
 //main().catch(console.error);
