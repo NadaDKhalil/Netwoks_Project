@@ -1,10 +1,15 @@
 var express = require('express');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
 var path = require('path');
+const { CallTracker } = require('assert/strict');
 var app = express();
 //var popupS = require('popups');
 let alert = require('alert');
 
 
+
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -28,6 +33,15 @@ app.get('/boxing', function (req, res) {
 
 app.get('/cart', function (req, res) {
     res.render('cart')
+});
+app.post("/cart", urlencodedParser, function (req, res) {
+    // console.log(req.body())
+    // res.redirect();
+    const user = req.body();
+    Cart.push(user);
+    res.json(Cart);
+    
+    
 });
 
 app.get('/galaxy', function (req, res) {
@@ -102,9 +116,49 @@ app.post('/search', function (req, res) {
     console.log(x);
     res.render('searchresults');
 });
+//data in db 
+var product = [
+    {
+    name : "Galaxy S21 Ultra",
+    price : "18,000"
 
+},
+
+{
+    name : "iPhone 13 Pro",
+    price : '23,000'
+
+},
+
+
+{
+    name : "Leaves of Grass",
+    price : '180'
+
+},
+
+{
+    name : "The Sun and Her Flowers",
+    price : '200'
+
+},
+{
+    name : "Boxing Bag",
+    price : '300'
+
+},
+{
+    name : "Tennis Racket",
+    price : '500'
+
+}
+];
+
+console.log("nada");
 //Mongo atlas connection
-async function main(x, res) {
+//async function main(x, res) {
+async function main() {
+    console.log("nada");
     var { MongoClient } = require('mongodb');
     var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
     var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -137,8 +191,22 @@ async function mainlogin(x, res) {
     else {
         res.render('home');
     }
+    var user = { username: "User2", password: "Pass2" };
+    // await client.db('firstdb').collection('firstcollection').insertOne(user);
+    // await client.db('firstdb').createCollection("product");
+    // await client.db('firstdb').createCollection("cart");
+    // await client.db('firstdb').collection('product').insertMany(product)
+    // var output = await client.db('firstdb').collection('firstcollection').find().toArray();
+    var temp = await client.db('firstdb').collection('product').find().toArray();
+    var temp1 = await client.db('firstdb').collection('cart').find().toArray();
+    console.log(temp);
+    console.log(temp1);
+    console.log("nada");
+
+
+
     client.close();
 }
-//main().catch(console.error);
+main().catch(console.error);
 
 app.listen(3000);
