@@ -1,10 +1,11 @@
 var express = require('express');
 var path = require('path');
 var app = express();
+var jsdom = require("jsdom");
+var JSDOM = jsdom.JSDOM;
+global.document = new JSDOM("html").window.document;
 //var popupS = require('popups');
 let alert = require('alert');
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -13,7 +14,7 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-
+//GET requests
 app.get('/', function (req, res) {
     res.render('login')
 });
@@ -69,42 +70,59 @@ app.get('/sun', function (req, res) {
 app.get('/tennis', function (req, res) {
     res.render('tennis')
 });
-
-/*app.post('/', function (req, res) {
-    var x = req.body.username;
-    var y = req.body.password;
-    //console.log(x + " " + y);
-    res.render('home');
-
-});*/
-
+//POST requests
+//registration
 app.post('/register', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
-    //console.log(x);
-    //console.log(y);
     var user = { username: x, password: y };
-    main(user, res).catch(console.error);
+    registration(user, res).catch(console.error);
 });
-
+//login
 app.post('/', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
-    //console.log(x);
-    //console.log(y);
     var user = { username: x, password: y };
-    mainlogin(user, res).catch(console.error);
+    login(user, res).catch(console.error);
 });
-
-//search Post
+//search
 app.post('/search', function (req, res) {
     var x = req.body.Search;
-    console.log(x);
-    res.render('searchresults');
-});
 
-//Mongo atlas connection
-async function main(x, res) {
+    search(x, res).catch(console.error);
+    //console.log(x);
+    // res.render('searchresults');
+});
+//
+async function search(x, res) {
+    var { MongoClient } = require('mongodb');
+    var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
+    var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    await client.connect();
+    var result = []
+    var resultPages = []
+    var out = ["Boxing Bag", "Galaxy S21 Ultra", "iPhone 13 Pro", "Leaves of Grass", "The Sun and Her Flowers", "Tennis Racket"];
+    var outPages = ["boxing", "galaxy", "iphone", "leaves", "sun", "tennis"]
+
+    for (let i = 0; i < out.length; i++) {
+        if (out[i].toLowerCase().includes(x.toLowerCase())) {
+            console.log(out[i]);
+            result.push(out[i]);
+            resultPages.push(outPages[i]);
+        }
+        console.log();
+    }
+    console.log(result);
+    if (result.length == 0) {
+        alert("Item not found")
+    }
+    else {
+        res.render('searchresults', { product: result, pages: resultPages });
+    }
+    client.close();
+}
+
+async function registration(x, res) {
     var { MongoClient } = require('mongodb');
     var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
     var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -123,15 +141,15 @@ async function main(x, res) {
     client.close();
 }
 
-async function mainlogin(x, res) {
+async function login(x, res) {
     var { MongoClient } = require('mongodb');
     var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
     var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     await client.connect();
-    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username ,password: x.password }).toArray();
+    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
     console.log(out);
     if (out.length == 0) {
-        alert("Username or password are incorrect!")
+        alert("Username or password is incorrect!")
         res.render('login');
     }
     else {
@@ -140,5 +158,8 @@ async function mainlogin(x, res) {
     client.close();
 }
 //main().catch(console.error);
-
 app.listen(3000);
+/*
+display:flex;
+flex-wrap: wrap;
+*/ 
