@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <style>
         body {
@@ -13,6 +14,19 @@
             text-align: center;
             -webkit-text-stroke: 1px blue;
         }
+        .container {
+            width: 80%;
+            margin: auto;
+            padding-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            color: white;
+        }
+        #label {
+            position: relative;
+            right: -15px;
+        }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +35,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
         <a class="navbar-brand" style="color: rgb(191, 255, 161)">Cart</a>
@@ -38,5 +53,20 @@
             </form>
         </div>
     </nav>
+    <div class="container">
+        <% for(var i=0; i <product.length; i++) { %>
+            <div class="container1">
+                <img id="image" src="/<%= pages[i]%>.jpg" width="193" height="300">
+                <br>
+                <label id="label1" class="ml-4 my-2">
+                    <%= product[i]%>
+                </label>
+                <br>
+                <button onclick="location.href = '/<%= pages[i]%>';" id="leaves" class="btn btn-secondary ml-3"> View
+                </button>
+            </div>
+            <% } %>
+    </div>
 </body>
+
 </html>
