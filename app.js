@@ -185,6 +185,14 @@ async function registration(x, res) {
     var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
     console.log(out);
     if (out.length != 0) {
+        /*if (typeof window === "undefined") {
+            //console.log("Oops, `window` is not defined");
+            Window.alert("Username is already used.");
+        }
+        //alert("Username is already used.");*/
+        /*popupS.alert({
+            content: 'Username is already used!'
+        });*/
         alert("Username is already used!")
         res.render('registration');
     }
