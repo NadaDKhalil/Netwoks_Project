@@ -28,7 +28,7 @@ app.use(session({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//var sess;
+var sess;
 //GET requests
 app.get('/', function (req, res) {
     res.render('login')
@@ -112,8 +112,8 @@ app.post('/addboxing', function (req, res) {
 });
 async function addToCart(product) {
     await client2.connect();
-    console.log(req.session.username);
-    var username = { username: req.session.username };
+    //console.log(req.session.username);
+    var username = { username: sess.username };
     var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
     console.log(user);
     var cart = user.cart;
@@ -151,8 +151,9 @@ app.post('/register', function (req, res) {
 app.post('/', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
-    req.session.username = x;
-    console.log(req.session.username);
+    sess = req.session;
+    sess.username = x;
+    //console.log(req.session.username);
     var user = { username: x, password: y };
     login(user, res).catch(console.error);
 });
@@ -209,7 +210,7 @@ async function registration(x, res) {
 }
 
 async function login(x, res) {
-    console.log(req.session.username);
+    //console.log(req.session.username);
     await client2.connect();
     var out = await client2.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
     console.log(out);
@@ -224,13 +225,13 @@ async function login(x, res) {
 }
 //app.listen(3000);
 
-if(process.env.PORT) {
-    app.listen(process.env.PORT, function() {
+if (process.env.PORT) {
+    app.listen(process.env.PORT, function () {
         console.log('server started');
     })
 }
 else {
-    app.listen(3000, function() {
+    app.listen(3000, function () {
         console.log('server started on port 3000');
     })
 }
