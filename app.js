@@ -5,10 +5,13 @@ let alert = require('alert');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const req = require('express/lib/request');
+//const redis = require('redis');
+//const redisStore = require('connect-redis')(session);
+//const client = redis.createClient();
 
 var { MongoClient } = require('mongodb');
 var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
-var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+var client2 = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -17,11 +20,15 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({ secret: 'ssshhhhh', saveUninitialized: true, resave: true }));
+app.use(session({
+    secret: 'ssshhhhh',
+    saveUninitialized: false,
+    resave: false
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var sess;
+//var sess;
 //GET requests
 app.get('/', function (req, res) {
     res.render('login')
@@ -104,9 +111,10 @@ app.post('/addboxing', function (req, res) {
     addToCart(product);
 });
 async function addToCart(product) {
-    await client.connect();
-    var username = { username: sess.username };
-    var user = await client.db('firstdb').collection('firstcollection').findOne(username);
+    await client2.connect();
+    console.log(req.session.username);
+    var username = { username: req.session.username };
+    var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
     console.log(user);
     var cart = user.cart;
     var found = false;
@@ -122,7 +130,7 @@ async function addToCart(product) {
         alert("Product is added successfully!")
         cart.push(product);
         var newcart = { $set: { cart: cart } };
-        await client.db('firstdb').collection('firstcollection').updateOne(username, newcart, function (err, res) {
+        await client2.db('firstdb').collection('firstcollection').updateOne(username, newcart, function (err, res) {
             if (err) throw err;
             console.log("1 document updated");
         });
@@ -143,8 +151,8 @@ app.post('/register', function (req, res) {
 app.post('/', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
-    sess = req.session
-    sess.username = x;
+    req.session.username = x;
+    console.log(req.session.username);
     var user = { username: x, password: y };
     login(user, res).catch(console.error);
 });
@@ -155,7 +163,7 @@ app.post('/search', function (req, res) {
 });
 //
 async function search(x, res) {
-    await client.connect();
+    await client2.connect();
 
     var result = []
     var resultPages = []
@@ -177,22 +185,14 @@ async function search(x, res) {
     else {
         res.render('searchresults', { product: result, pages: resultPages });
     }
-    client.close();
+    client2.close();
 }
 
 async function registration(x, res) {
-    await client.connect();
-    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
+    await client2.connect();
+    var out = await client2.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
     console.log(out);
     if (out.length != 0) {
-        /*if (typeof window === "undefined") {
-            //console.log("Oops, `window` is not defined");
-            Window.alert("Username is already used.");
-        }
-        //alert("Username is already used.");*/
-        /*popupS.alert({
-            content: 'Username is already used!'
-        });*/
         alert("Username is already used!")
         res.render('registration');
     }
@@ -201,16 +201,17 @@ async function registration(x, res) {
         res.redirect('registration');
     }
     else {
-        await client.db('firstdb').collection('firstcollection').insertOne(x);
+        await client2.db('firstdb').collection('firstcollection').insertOne(x);
         alert("Registration was successful!");
         res.redirect('/');
     }
-    client.close();
+    client2.close();
 }
 
 async function login(x, res) {
-    await client.connect();
-    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
+    console.log(req.session.username);
+    await client2.connect();
+    var out = await client2.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
     console.log(out);
     if (out.length == 0) {
         alert("Username or password is incorrect!")
@@ -219,7 +220,17 @@ async function login(x, res) {
     else {
         res.render('home');
     }
-    client.close();
+    client2.close();
 }
-//main().catch(console.error);
-app.listen(3000);
+//app.listen(3000);
+
+if(process.env.PORT) {
+    app.listen(process.env.PORT, function() {
+        console.log('server started');
+    })
+}
+else {
+    app.listen(3000, function() {
+        console.log('server started on port 3000');
+    })
+}
