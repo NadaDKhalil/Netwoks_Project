@@ -5,9 +5,6 @@ let alert = require('alert');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const req = require('express/lib/request');
-//const redis = require('redis');
-//const redisStore = require('connect-redis')(session);
-//const client = redis.createClient();
 
 var { MongoClient } = require('mongodb');
 var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
@@ -28,41 +25,51 @@ app.use(session({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var sess;
+//var sess = [];
+
+function auth(req, res, next) {
+    if ("username" in req.session) {
+        console.log("here")
+        next()
+
+    } else {
+        res.redirect('/')
+    }
+}
 //GET requests
 app.get('/', function (req, res) {
     res.render('login')
 });
 
-app.get('/books', function (req, res) {
+app.get('/books', auth, function (req, res) {
     res.render('books')
 });
 
-app.get('/boxing', function (req, res) {
+app.get('/boxing', auth, function (req, res) {
     res.render('boxing')
 });
 
-app.get('/cart', function (req, res) {
+app.get('/cart', auth, function (req, res) {
     res.render('cart')
 });
 
-app.get('/galaxy', function (req, res) {
+app.get('/galaxy', auth, function (req, res) {
     res.render('galaxy')
 });
 
-app.get('/home', function (req, res) {
+app.get('/home', auth, function (req, res) {
     res.render('home')
 });
 
-app.get('/iphone', function (req, res) {
+app.get('/iphone', auth, function (req, res) {
     res.render('iphone')
 });
 
-app.get('/leaves', function (req, res) {
+app.get('/leaves', auth, function (req, res) {
     res.render('leaves')
 });
 
-app.get('/phones', function (req, res) {
+app.get('/phones', auth, function (req, res) {
     res.render('phones')
 });
 
@@ -70,50 +77,50 @@ app.get('/registration', function (req, res) {
     res.render('registration')
 });
 
-app.get('/searchresults', function (req, res) {
+app.get('/searchresults', auth, function (req, res) {
     res.render('searchresults', {})
 });
 
-app.get('/sports', function (req, res) {
+app.get('/sports', auth, function (req, res) {
     res.render('sports')
 });
 
-app.get('/sun', function (req, res) {
+app.get('/sun', auth, function (req, res) {
     res.render('sun')
 });
 
-app.get('/tennis', function (req, res) {
+app.get('/tennis', auth, function (req, res) {
     res.render('tennis')
 });
 //POST requests
 app.post('/addgalaxy', function (req, res) {
     var product = "galaxy";
-    addToCart(product);
+    addToCart(req, product);
 });
 app.post('/addiphone', function (req, res) {
     var product = "iphone";
-    addToCart(product);
+    addToCart(req, product);
 });
 app.post('/addleaves', function (req, res) {
     var product = "leaves";
-    addToCart(product);
+    addToCart(req, product);
 });
 app.post('/addsun', function (req, res) {
     var product = "sun";
-    addToCart(product);
+    addToCart(req, product);
 });
 app.post('/addtennis', function (req, res) {
     var product = "tennis";
-    addToCart(product);
+    addToCart(req, product);
 });
 app.post('/addboxing', function (req, res) {
     var product = "boxing";
-    addToCart(product);
+    addToCart(req, product);
 });
-async function addToCart(product) {
+async function addToCart(req, product) {
     await client2.connect();
-    //console.log(req.session.username);
-    var username = { username: sess.username };
+    console.log(req.session.username);
+    var username = { username: req.session.username };
     var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
     console.log(user);
     var cart = user.cart;
@@ -137,9 +144,20 @@ async function addToCart(product) {
     }
     //client.close();
 }
-app.post('/cart', function (req, res) {
+app.post('/cart', auth, function (req, res) {
+    showCart(req, res).catch(console.error);
     //res.render('cart',{ product: , pages:  });
 });
+//showcart
+async function showCart(req, res) {
+    await client2.connect();
+    var username = { username: req.session.username };
+    var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
+    //console.log(user);
+    var cart = user.cart;
+    res.render('cart', { product: cart });
+    //client.close();
+}
 //registration
 app.post('/register', function (req, res) {
     var x = req.body.username;
@@ -151,14 +169,16 @@ app.post('/register', function (req, res) {
 app.post('/', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
-    sess = req.session;
-    sess.username = x;
+    req.session.username = x;
+    // sess = req.session;
+    // sess.username = x;
     //console.log(req.session.username);
     var user = { username: x, password: y };
     login(user, res).catch(console.error);
 });
 //search
 app.post('/search', function (req, res) {
+    console.log(req.session.username);
     var x = req.body.Search;
     search(x, res).catch(console.error);
 });
