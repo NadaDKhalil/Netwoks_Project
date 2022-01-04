@@ -8,7 +8,7 @@ const req = require('express/lib/request');
 
 var { MongoClient } = require('mongodb');
 var uri = "mongodb+srv://admin:admin@cluster0.9mj9q.mongodb.net/firstdb?retryWrites=true&w=majority"
-var client2 = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -25,11 +25,8 @@ app.use(session({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//var sess = [];
-
 function auth(req, res, next) {
     if ("username" in req.session) {
-        console.log("here")
         next()
 
     } else {
@@ -39,6 +36,14 @@ function auth(req, res, next) {
 //GET requests
 app.get('/', function (req, res) {
     res.render('login')
+});
+
+app.get('/registration', function (req, res) {
+    res.render('registration')
+});
+
+app.get('/home', auth, function (req, res) {
+    res.render('home')
 });
 
 app.get('/books', auth, function (req, res) {
@@ -57,10 +62,6 @@ app.get('/galaxy', auth, function (req, res) {
     res.render('galaxy')
 });
 
-app.get('/home', auth, function (req, res) {
-    res.render('home')
-});
-
 app.get('/iphone', auth, function (req, res) {
     res.render('iphone')
 });
@@ -71,10 +72,6 @@ app.get('/leaves', auth, function (req, res) {
 
 app.get('/phones', auth, function (req, res) {
     res.render('phones')
-});
-
-app.get('/registration', function (req, res) {
-    res.render('registration')
 });
 
 app.get('/searchresults', auth, function (req, res) {
@@ -94,35 +91,28 @@ app.get('/tennis', auth, function (req, res) {
 });
 //POST requests
 app.post('/addgalaxy', function (req, res) {
-    var product = "galaxy";
-    addToCart(req, product);
+    addToCart(req, res, "galaxy");
 });
 app.post('/addiphone', function (req, res) {
-    var product = "iphone";
-    addToCart(req, product);
+    addToCart(req, res, "iphone");
 });
 app.post('/addleaves', function (req, res) {
-    var product = "leaves";
-    addToCart(req, product);
+    addToCart(req, res, "leaves");
 });
 app.post('/addsun', function (req, res) {
-    var product = "sun";
-    addToCart(req, product);
+    addToCart(req, res, "sun");
 });
 app.post('/addtennis', function (req, res) {
-    var product = "tennis";
-    addToCart(req, product);
+    addToCart(req, res, "tennis");
 });
 app.post('/addboxing', function (req, res) {
-    var product = "boxing";
-    addToCart(req, product);
+    addToCart(req, res, "boxing");
 });
-async function addToCart(req, product) {
-    await client2.connect();
-    console.log(req.session.username);
+
+async function addToCart(req, res, product) {
+    await client.connect();
     var username = { username: req.session.username };
-    var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
-    console.log(user);
+    var user = await client.db('firstdb').collection('firstcollection').findOne(username);
     var cart = user.cart;
     var found = false;
     for (let i = 0; i < cart.length; i++) {
@@ -137,23 +127,22 @@ async function addToCart(req, product) {
         alert("Product is added successfully!")
         cart.push(product);
         var newcart = { $set: { cart: cart } };
-        await client2.db('firstdb').collection('firstcollection').updateOne(username, newcart, function (err, res) {
+        await client.db('firstdb').collection('firstcollection').updateOne(username, newcart, function (err, res) {
             if (err) throw err;
             console.log("1 document updated");
         });
     }
+    res.render(product)
     //client.close();
 }
 app.post('/cart', auth, function (req, res) {
     showCart(req, res).catch(console.error);
-    //res.render('cart',{ product: , pages:  });
 });
 //showcart
 async function showCart(req, res) {
-    await client2.connect();
+    await client.connect();
     var username = { username: req.session.username };
-    var user = await client2.db('firstdb').collection('firstcollection').findOne(username);
-    //console.log(user);
+    var user = await client.db('firstdb').collection('firstcollection').findOne(username);
     var cart = user.cart;
     res.render('cart', { product: cart });
     //client.close();
@@ -170,22 +159,17 @@ app.post('/', function (req, res) {
     var x = req.body.username;
     var y = req.body.password;
     req.session.username = x;
-    // sess = req.session;
-    // sess.username = x;
-    //console.log(req.session.username);
     var user = { username: x, password: y };
     login(user, res).catch(console.error);
 });
 //search
 app.post('/search', function (req, res) {
-    console.log(req.session.username);
     var x = req.body.Search;
     search(x, res).catch(console.error);
 });
-//
+//search
 async function search(x, res) {
-    await client2.connect();
-
+    await client.connect();
     var result = []
     var resultPages = []
     var out = ["Boxing Bag", "Galaxy S21 Ultra", "iPhone 13 Pro", "Leaves of Grass", "The Sun and Her Flowers", "Tennis Racket"];
@@ -193,26 +177,23 @@ async function search(x, res) {
 
     for (let i = 0; i < out.length; i++) {
         if (out[i].toLowerCase().includes(x.toLowerCase())) {
-            console.log(out[i]);
             result.push(out[i]);
             resultPages.push(outPages[i]);
         }
-        console.log();
     }
-    console.log(result);
     if (result.length == 0 || x == "") {
         alert("Item not found")
+        res.redirect('home');
     }
     else {
         res.render('searchresults', { product: result, pages: resultPages });
     }
-    client2.close();
+    client.close();
 }
 
 async function registration(x, res) {
-    await client2.connect();
-    var out = await client2.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
-    console.log(out);
+    await client.connect();
+    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username }).toArray();
     if (out.length != 0) {
         alert("Username is already used!")
         res.render('registration');
@@ -222,18 +203,16 @@ async function registration(x, res) {
         res.redirect('registration');
     }
     else {
-        await client2.db('firstdb').collection('firstcollection').insertOne(x);
+        await client.db('firstdb').collection('firstcollection').insertOne(x);
         alert("Registration was successful!");
         res.redirect('/');
     }
-    client2.close();
+    client.close();
 }
 
 async function login(x, res) {
-    //console.log(req.session.username);
-    await client2.connect();
-    var out = await client2.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
-    console.log(out);
+    await client.connect();
+    var out = await client.db('firstdb').collection('firstcollection').find({ username: x.username, password: x.password }).toArray();
     if (out.length == 0) {
         alert("Username or password is incorrect!")
         res.render('login');
@@ -241,9 +220,8 @@ async function login(x, res) {
     else {
         res.render('home');
     }
-    client2.close();
+    client.close();
 }
-//app.listen(3000);
 
 if (process.env.PORT) {
     app.listen(process.env.PORT, function () {

@@ -25,15 +25,6 @@
             color: white;
         }
 
-        /*.container1 {
-            margin-right: 30px;
-            margin-left: 30px;
-            position: fixed;
-            display: flex;
-            flex-wrap: wrap;
-            color: white;
-        }*/
-
         #label {
             position: relative;
             right: -15px;
@@ -64,10 +55,15 @@
             </form>
         </div>
     </nav>
+    <br />
+    <br />
+    <br />
+    <br />
     <div class="container">
+        <br />
         <% for(var i=0; i <product.length; i++) { %>
             <div class="container1">
-                <img id="image" src="/<%= pages[i]%>.jpg" width="193" height="300">
+                <img id="image" src="/<%= pages[i]%>.jpg" width="180" height="300">
                 <br>
                 <label id="label1" class="ml-4 my-2">
                     <%= product[i]%>
@@ -76,10 +72,8 @@
                 <button onclick="location.href = '/<%= pages[i]%>';" id="leaves" class="btn btn-secondary ml-3"> View
                 </button>
             </div>
+            <hr />
             <% } %>
     </div>
-
-
 </body>
-
 </html>
